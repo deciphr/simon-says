@@ -9,7 +9,7 @@ import socket
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-host = '127.0.0.1' #'10.190.23.40'
+host = input("Host: ")
 port = 42069
 
 client.connect((host, port))
