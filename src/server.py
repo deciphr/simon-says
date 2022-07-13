@@ -11,7 +11,7 @@ import threading
 DEBUG = False
 
 def on_client_connect(client, addr):
-    print(f"Connect: {addr}")
+    print(f"Connected: {addr}")
 
     try:
         while True:
@@ -19,9 +19,10 @@ def on_client_connect(client, addr):
             print(f"{addr}: {msg.decode()}")
 
             client.send("Receieved!".encode())
+    except ConnectionResetError:
+        print(f"Disconnected: {addr}")
     finally:
         client.close()
-        print(f"Disconnected: {addr}")
 
 def main():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
