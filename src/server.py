@@ -7,47 +7,35 @@ Author: deciphr
 Date: 07/13/22
 """
 
-import netifaces as ni
-import socket
+import socketserver
 import threading
-DEBUG = False
 
-def on_client_connect(client, addr):
-    print(f"Connected: {addr}")
+server_thread = None
+class TCPHandler(socketserver.BaseRequestHandler):
+    def handle(self):
+        self.data = self.request.recv(1024).strip()
 
-    try:
-        while True:
-            msg = client.recv(1024)
-            print(f"{addr}: {msg.decode()}")
+        client_addr = self.client_address[0]
+        response = self.data.decode()
 
-            client.send("Receieved!".encode())
-    except ConnectionResetError:
-        print(f"Disconnected: {addr}")
-    finally:
-        client.close()
+        print(f"{client_addr} wrote: {response}")
 
-def main():
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host = ni.ifaddresses('eth0')[ni.AF_INET][0]['addr'] or input("Enter your host ip: ")
-    port = 42069
-
-    server.bind(('127.0.0.1', port))
-    if DEBUG: print("Server binded")
-
-    server.listen(5)
-    print(f"Server started: {host}:{port}")
-    print("Listening for clients")
-
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
-        server.bind(('127.0.0.1', port))
-        server.listen(1)
-
-        while True:
-            conn, addr = server.accept()
-            with conn:
-                client_thread = threading.Thread(target=on_client_connect, args=(conn, addr))
-                client_thread.start()
-                client_thread.join()
+        if response == "Key.up":
+            print("Up")
+        elif response == "Key.down":
+            print("Down")
+        elif response == "Key.left":
+            print("Left")
+        elif response == "Key.right":
+            print("Right")
 
 if __name__ == "__main__":
-    main()
+    ip, port = input("Set server IP: "), 9000
+
+    # handle communication between server and client
+    print(f"Starting server on {ip}:{port}")
+    with socketserver.TCPServer(('localhost', port), TCPHandler) as server:
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            print("Server quitting!")
