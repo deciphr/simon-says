@@ -10,6 +10,7 @@ Date: 07/13/22
 import socket
 from pynput.keyboard import Key, Listener
 
+
 def client(message, ip, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
@@ -25,7 +26,8 @@ def client(message, ip, port):
             sock.close()
 
             raise KeyboardInterrupt
-        
+
+
 if __name__ == "__main__":
     ip, port = input("Host IP: "), 9000
 
@@ -37,9 +39,14 @@ if __name__ == "__main__":
         if str(key) in supported_keys:
             client(key, ip, port)
 
+
     with Listener(on_press=handle_press) as listener:
         try:
-            listener.join()
+            # is the server up?
+            client("ping", ip, port)
+
             print("Press 'esc' to quit...")
+            listener.join()
+
         except KeyboardInterrupt:
             print("Quitting!")

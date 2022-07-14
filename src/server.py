@@ -7,10 +7,14 @@ Author: deciphr
 Date: 07/13/22
 """
 
+import socket
 import socketserver
 import threading
 
 server_thread = None
+connected_hosts = []
+
+
 class TCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
         self.data = self.request.recv(1024).strip()
@@ -18,7 +22,12 @@ class TCPHandler(socketserver.BaseRequestHandler):
         client_addr = self.client_address[0]
         response = self.data.decode()
 
-        print(f"{client_addr} wrote: {response}")
+        if client_addr not in connected_hosts:
+            connected_hosts.append(client_addr)
+            print(f"{socket.gethostbyaddr(client_addr)[0]}@{client_addr} has connected!")
+
+        if response == "ping":
+            self.request.sendall("pong!")
 
         if response == "Key.up":
             print("Up")
@@ -28,6 +37,7 @@ class TCPHandler(socketserver.BaseRequestHandler):
             print("Left")
         elif response == "Key.right":
             print("Right")
+
 
 if __name__ == "__main__":
     ip, port = input("Set server IP: "), 9000
