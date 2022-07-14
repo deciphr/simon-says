@@ -11,6 +11,8 @@ import socket
 import socketserver
 import threading
 
+import game_server
+
 server_thread = None
 connected_hosts = []
 
@@ -46,6 +48,7 @@ if __name__ == "__main__":
     print(f"Starting server on {ip}:{port}")
     with socketserver.TCPServer(('localhost', port), TCPHandler) as server:
         try:
+            game_server.load_game()
             server.serve_forever()
         except KeyboardInterrupt:
             print("Server quitting!")
