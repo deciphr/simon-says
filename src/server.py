@@ -28,7 +28,7 @@ def on_client_connect(client, addr):
 
 def main():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host = ni.ifaddresses('eth0')[ni.AF_INET][0]['addr']
+    host = ni.ifaddresses('eth0')[ni.AF_INET][0]['addr'] or input("Enter your host ip: ")
     port = 42069
 
     server.bind(('127.0.0.1', port))
