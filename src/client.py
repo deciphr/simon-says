@@ -12,6 +12,9 @@ import tty
 import sys
 import termios
 
+from tkinter import *
+from tkinter import simpledialog
+
 orig_settings = termios.tcgetattr(sys.stdin)
 tty.setcbreak(sys.stdin)
 
@@ -23,10 +26,13 @@ def client(message, ip, port):
             sock.sendall(bytes(str(message), 'ascii'))
 
             result = sock.recv(1024).decode()
-
             if result:
                 if result == "etr_user":
-                    username = input("Enter a username: ")
+                    root = Tk()
+                    root.withdraw()
+
+                    username_dialog = simpledialog.askstring("Username Entry", "Choose a username")
+                    sock.sendall(username_dialog.encode())
             else:
                 print('no result')
         except ConnectionRefusedError:

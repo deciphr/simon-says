@@ -12,8 +12,11 @@ player_count = 0
 connected_hosts = {}
 
 class GameClientHandler(socketserver.BaseRequestHandler):
-    def handle(self):
+    def listen(self):
         self.data = self.request.recv(1024).strip()
+
+    def handle(self):
+        self.listen()
     
         client_addr = self.client_address[0]
         response = self.data.decode()
@@ -31,8 +34,8 @@ class GameClientHandler(socketserver.BaseRequestHandler):
             client = connected_hosts[client_addr]
 
             if response == "ping":
-                self.request.sendall("Enter a username: ".encode())
                 client['status'] = 'etr_user'
+                self.listen()
             elif client['status'] == 'etr_user':
                 client['username'] = response
                 print(f"{client_addr}'s user is {client['username']}")
@@ -45,6 +48,8 @@ class GameClientHandler(socketserver.BaseRequestHandler):
                 print("Left")
             elif response == "Key.right":
                 print("Right")
+
+            self.request.sendall(client['status'].encode())
         except ValueError:
             pass
 
