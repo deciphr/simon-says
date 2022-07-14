@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 """
 File: server.py
 Desc: Server script for Simon Says game

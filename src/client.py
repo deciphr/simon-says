@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 """
 File: client.py
 Desc: Client script for Simon Says game
