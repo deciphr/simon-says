@@ -7,48 +7,36 @@ Author: deciphr
 Date: 07/13/22
 """
 
-import socket
 import socketserver
 import threading
 
-import game_server
+from game_server import *
 
 server_thread = None
-connected_hosts = []
-
-
-class TCPHandler(socketserver.BaseRequestHandler):
-    def handle(self):
-        self.data = self.request.recv(1024).strip()
-
-        client_addr = self.client_address[0]
-        response = self.data.decode()
-
-        if client_addr not in connected_hosts:
-            connected_hosts.append(client_addr)
-            print(f"{socket.gethostbyaddr(client_addr)[0]}@{client_addr} has connected!")
-
-        if response == "ping":
-            self.request.sendall("pong!")
-
-        if response == "Key.up":
-            print("Up")
-        elif response == "Key.down":
-            print("Down")
-        elif response == "Key.left":
-            print("Left")
-        elif response == "Key.right":
-            print("Right")
 
 
 if __name__ == "__main__":
     ip, port = input("Set server IP: "), 9000
 
+    if len(ip) == 0:
+        ip = "127.0.0.1"
+
     # handle communication between server and client
     print(f"Starting server on {ip}:{port}")
-    with socketserver.TCPServer(('localhost', port), TCPHandler) as server:
+    with socketserver.TCPServer(('localhost', port), GameClientHandler) as server:
         try:
-            game_server.load_game()
-            server.serve_forever()
+            server_thread = threading.Thread(target=server.serve_forever())
+            server_thread.start()
+            server_thread.join()
+            
+            #=== LOAD UI===#
+            root = Tk()
+
+            root.attributes('-fullscreen',True)
+            root.rowconfigure(0, weight=1)
+            root.columnconfigure(0, weight=1)
+
+            StartFrame(root)
+            root.mainloop()
         except KeyboardInterrupt:
             print("Server quitting!")

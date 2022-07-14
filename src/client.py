@@ -8,19 +8,27 @@ Date: 07/13/22
 """
 
 import socket
-from pynput.keyboard import Key, Listener
+import tty
+import sys
+import termios
 
+orig_settings = termios.tcgetattr(sys.stdin)
+tty.setcbreak(sys.stdin)
 
 def client(message, ip, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
             sock.connect((ip, port))
+            print('sending')
             sock.sendall(bytes(str(message), 'ascii'))
 
-            result = sock.recv(1024)
+            result = sock.recv(1024).decode()
 
             if result:
-                print(result.decode())
+                if result == "etr_user":
+                    username = input("Enter a username: ")
+            else:
+                print('no result')
         except ConnectionRefusedError:
             print("\nCould not connect to the server")
             sock.close()
@@ -31,22 +39,16 @@ def client(message, ip, port):
 if __name__ == "__main__":
     ip, port = input("Host IP: "), 9000
 
-    def handle_press(key):
-        supported_keys = ["Key.up", "Key.down", "Key.left", "Key.right"]
-        if key == Key.esc:
-            raise KeyboardInterrupt
+    if len(ip) == 0:
+        ip = "127.0.0.1"
+    print(f"Connecting to {ip}:{port}")
 
-        if str(key) in supported_keys:
-            client(key, ip, port)
+    client('ping', ip, port)
 
+    # x = 0
+    
+    # while x != chr(27): # ESC
+    #     x=sys.stdin.read(1)[0]
+    #     print("You pressed", x)
 
-    with Listener(on_press=handle_press) as listener:
-        try:
-            # is the server up?
-            client("ping", ip, port)
-
-            print("Press 'esc' to quit...")
-            listener.join()
-
-        except KeyboardInterrupt:
-            print("Quitting!")
+    # termios.tcsetattr(sys.stdin, termios.TCSADRAIN, orig_settings)    
