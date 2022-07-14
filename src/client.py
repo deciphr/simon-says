@@ -18,23 +18,18 @@ from tkinter import simpledialog
 orig_settings = termios.tcgetattr(sys.stdin)
 tty.setcbreak(sys.stdin)
 
+
 def client(message, ip, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
             sock.connect((ip, port))
             print('sending')
+
             sock.sendall(bytes(str(message), 'ascii'))
 
             result = sock.recv(1024).decode()
-            if result:
-                if result == "etr_user":
-                    root = Tk()
-                    root.withdraw()
 
-                    username_dialog = simpledialog.askstring("Username Entry", "Choose a username")
-                    sock.sendall(username_dialog.encode())
-            else:
-                print('no result')
+            return result
         except ConnectionRefusedError:
             print("\nCould not connect to the server")
             sock.close()
@@ -49,7 +44,18 @@ if __name__ == "__main__":
         ip = "127.0.0.1"
     print(f"Connecting to {ip}:{port}")
 
-    client('ping', ip, port)
+    result = client('ping', ip, port)
+
+    if result:
+        if result == "etr_user":
+            root = Tk()
+            root.withdraw()
+
+            username_dialog = simpledialog.askstring(
+                    "Username Entry", "Choose a username")
+            client(username_dialog, ip, port)
+    else:
+            print('no result')
 
     # x = 0
     
