@@ -11,7 +11,8 @@ import tkinter as tk
 
 import socketserver
 import threading
-from game_server import GameClientHandler, StartFrame
+
+from game_server import *
 
 server_thread = None
 ui_thread = None
@@ -30,7 +31,7 @@ if __name__ == "__main__":
         root.rowconfigure(0, weight=1)
         root.columnconfigure(0, weight=1)
 
-        StartFrame(root)
+        load_frame('start', root)
         root.mainloop()
 
         print("Started UI")

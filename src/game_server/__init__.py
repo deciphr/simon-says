@@ -2,21 +2,21 @@ r"""
 Server UI and Funcs
 """
 
-from glob import glob
+from cProfile import run
+from pydoc import cli
+from sqlite3 import paramstyle
+import game_server.frames as frames
 import socket, socketserver
-from tkinter import *
-from tkinter import ttk
-
-running_window = None
 
 player_count = 0
 connected_hosts = {}
 
+running_window = None
 gameRunning = False
 
 class GameClientHandler(socketserver.BaseRequestHandler):
     def listen(self):
-        print("listening")
+        # print("listening")
         self.data = self.request.recv(1024).strip()
 
     def handle(self):
@@ -25,24 +25,29 @@ class GameClientHandler(socketserver.BaseRequestHandler):
         client_addr = self.client_address[0]
         response = self.data.decode()
 
-        if client_addr not in connected_hosts:
-            connected_hosts[client_addr] = {
-                "status": 0,
-                "usernames": None
-            }
+        if player_count < 5:
+            if client_addr not in connected_hosts:
+                connected_hosts[client_addr] = {
+                    "status": "",
+                    "username": None
+ 
+                }
 
-            print(f"{socket.gethostbyaddr(client_addr)[0]}@{client_addr} has connected!")
+                print(f"{socket.gethostbyaddr(client_addr)[0]}@{client_addr} has connected!")
         # first connection
         try:
             client = connected_hosts[client_addr]
-
-            if response == "ping":
+            
+            if response == "ping" and client['status'] == "":
                 client['status'] = 'etr_user'
             elif client['status'] == 'etr_user':
                 client['username'] = response
-                running_window.add_player(client['username'])
+                client['status']  = 'waiting_on_start'
 
+                running_window.add_player(client['username'])
                 print(f"{client_addr}'s user is {client['username']}")
+            elif client['status'] == 'waiting_on_start':
+                print("waiting on start!")
             if response == "Key.up":
                 print("Up")
             elif response == "Key.down":
@@ -56,40 +61,8 @@ class GameClientHandler(socketserver.BaseRequestHandler):
         except ValueError:
             pass
 
-        
-class StartFrame:
-    def add_player(self, name):
-            global player_count
-            if player_count < 5:
-                player_count += 1
-                test_label = Label(self.player_wrapper,
-                                   text=name, background="#fcdc92",
-                                   font=('Courier', 24))
-                test_label.pack(fill=BOTH, expand="yes", pady=20)
+def load_frame(name, root):
+    global running_window
+    frame = frames.get_frame(name)(root)
 
-    def __init__(self, master):
-        #=== Create Base Frame ===#
-        self.start_frame = Frame(master)
-        self.start_frame.grid(row=0, column=0, sticky=NSEW)
-
-        start_frame_title = Label(
-            self.start_frame, text="Simon Says", height=3, font=('Courier', 45))
-        start_frame_title.pack(fill='x')
-
-        start_frame_btn = Button(self.start_frame, text="Begin!")
-        start_frame_btn.pack(side=BOTTOM)
-
-        #===Player List===#
-        self.player_wrapper = LabelFrame(self.start_frame)
-        self.player_wrapper.pack(
-            fill="both", expand="yes", padx=20, pady=50)
-
-        player_canvas = Canvas(self.player_wrapper)
-        player_canvas.place(relx=0.5, rely=0.5, anchor=CENTER)
-
-        player_scrollbar = ttk.Scrollbar(
-            self.player_wrapper, orient="vertical", command=player_canvas.yview)
-        player_scrollbar.pack(side=RIGHT, fill="y")
-
-        global running_window
-        running_window = self
+    running_window = frame
