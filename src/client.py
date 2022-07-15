@@ -8,15 +8,15 @@ Date: 07/13/22
 """
 
 import socket
-import tty
-import sys
-import termios
+# import tty
+# import sys
+# import termios 
 
 from tkinter import *
 from tkinter import simpledialog
 
-orig_settings = termios.tcgetattr(sys.stdin)
-tty.setcbreak(sys.stdin)
+# orig_settings = termios.tcgetattr(sys.stdin)
+# tty.setcbreak(sys.stdin)
 
 
 def client(message, ip, port):
@@ -28,7 +28,6 @@ def client(message, ip, port):
             sock.sendall(bytes(str(message), 'ascii'))
 
             result = sock.recv(1024).decode()
-
             return result
         except ConnectionRefusedError:
             print("\nCould not connect to the server")
@@ -45,7 +44,6 @@ if __name__ == "__main__":
     print(f"Connecting to {ip}:{port}")
 
     result = client('ping', ip, port)
-
     if result:
         if result == "etr_user":
             root = Tk()
