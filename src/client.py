@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 """
-File: server.py
+File: client.py
 Desc: Client script for Simon Says game
 Author: deciphr
 Date: 07/13/22
@@ -17,7 +17,7 @@ from tkinter import simpledialog
 
 # orig_settings = termios.tcgetattr(sys.stdin)
 # tty.setcbreak(sys.stdin)
-
+socket.setdefaulttimeout(10)
 
 def client(message, ip, port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
