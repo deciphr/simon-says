@@ -6,8 +6,9 @@ from time import sleep
 from tkinter import *
 from tkinter import ttk
 
-import socket, socketserver
-import threading
+import socket
+import socketserver
+from itertools import islice, cycle
 
 root = None
 running_window = None
@@ -16,6 +17,7 @@ gameRunning = False
 player_count = 0
 connected_hosts = {}
 
+
 class GameClientHandler(socketserver.BaseRequestHandler):
     def listen(self):
         # print("listening")
@@ -23,7 +25,7 @@ class GameClientHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
         self.listen()
-    
+
         client_addr = self.client_address[0]
         response = self.data.decode()
 
@@ -32,19 +34,18 @@ class GameClientHandler(socketserver.BaseRequestHandler):
                 connected_hosts[client_addr] = {
                     "status": "",
                     "username": None
- 
                 }
 
-                print(f"{socket.gethostbyaddr(client_addr)[0]}@{client_addr} has connected!")
+                print(
+                    f"{client_addr} has connected!")
         # first connection
         try:
             client = connected_hosts[client_addr]
-            
             if response == "ping" and client['status'] == "":
                 client['status'] = 'etr_user'
             elif client['status'] == 'etr_user':
                 client['username'] = response
-                client['status']  = 'waiting_on_start'
+                client['status'] = 'waiting_on_start'
 
                 running_window.add_player(client['username'])
                 print(f"{client_addr}'s user is {client['username']}")
@@ -68,9 +69,9 @@ class BlankFrame:
     def __init__(self, master):
         #=== Create Base Frame ===#
         self.parent = Frame(master)
-        self.parent.grid(row=0, column=0, sticky=NSEW)
 
         return self
+
 
 class StartFrame(BlankFrame):
     def add_player(self, name):
@@ -83,6 +84,7 @@ class StartFrame(BlankFrame):
         super().__init__(master)
 
         #===Frame===#
+        self.parent.grid(row=0, column=0, sticky=NSEW)
         start_frame_title = Label(
             self.parent, text="Simon Says", height=3, font=('Courier', 45))
         start_frame_title.pack(fill='x')
@@ -91,7 +93,9 @@ class StartFrame(BlankFrame):
             global gameRunning, root
 
             gameRunning = True
-            load_frame('game', root)
+            
+            self.parent.destroy()
+            load_frame('intro', root)
 
         start_frame_btn = Button(
             self.parent, text="Begin!", command=on_btn_press)
@@ -109,38 +113,95 @@ class StartFrame(BlankFrame):
             self.player_wrapper, orient="vertical", command=player_canvas.yview)
         player_scrollbar.pack(side=RIGHT, fill="y")
 
-class GameFrame(BlankFrame):
+
+class IntroFrame(BlankFrame):
     def __init__(self, master):
         super().__init__(master)
 
-        title = Label(
-            self.parent, text="Welcome to Simon Says!", height=3, font=('Courier', 45), wraplength=root.winfo_width())
-        title.place(relx=.5, rely=.5, anchor="center")
-        # title.after(1000, title.config(text="In order to play, you must use the following keys: W, A, S, D."))
+        self.parent.grid(row=0, column=0, sticky=NSEW)
+        self.messages = islice(cycle(["Welcome Simon Says!", "In order to play, you must use the following keys: W, A, S, D.",
+                                        "Press the keys according to the pattern on the screen.", "Are you ready?"]), 4)
+        self.message_count = 0
+        self.title = Label(
+            self.parent, text="", height=3, font=('Courier', 45), wraplength=root.winfo_width())
+        self.title.place(relx=.5, rely=.5, anchor="center")
+
+        if self.message_count < 4:
+            self.update_label()
+
+    def update_label(self):
+        self.message_count += 1
+        print('yes')
+        try:
+            value = next(self.messages)
+            self.title['text'] = value
+
+            root.after(1500, self.update_label)
+        except StopIteration:
+            self.parent.destroy()
+            load_frame('play', root)
+            print('stopped iter')
+            
+class PlayFrame(BlankFrame):
+    def __init__(self, master):
+        super().__init__(master)
+
+        self.parent.grid(row=0, column=0, sticky=NSEW)
+        # self.parent.config(bg="black")
+        # # self.parent.grid_rowconfigure(0, weight=1)
+        # # self.parent.grid_rowconfigure(1, weight=1)
+        # # self.parent.grid_columnconfigure(0, weight=1)
+        # # self.parent.grid_columnconfigure(2, weight=1)
+        # self.parent.pack()
+        self.buttons = {}
+
+        def make_key(key, x, y, **grid_options):
+            button = Label(self.parent, text=key, borderwidth=2, font=('Courier', 50), bg='white')
+            button.grid(**grid_options)
+            button.place(relx=x, rely=y, anchor="center")
+
+            self.buttons[key] = button
+        
+        def flash_key(key):
+            button = self.buttons[key]
+            button.config(bg="black")
+            root.after(1000, button.config(bg="white"))
+        
+        make_key('Up', x=0.5, y=0.25, row=0, column=1)
+        make_key('Down', x=0.5, y=.75, row=1, column=1)
+        make_key('Left', x=0.25, y=.75, row=1, column=0)
+        make_key('Right', x=0.75,y=.75, row=1, column=2)
+        flash_key('Up')
+    def send_pattern(self, pattern):
+        self.flash_key(self.buttons[pattern])
+
 
 frames_list = {
     'start': StartFrame,
-    'game': GameFrame
+    'intro': IntroFrame,
+    'play': PlayFrame
 }
+
 
 def get_frame(frame):
     if frame in frames_list:
         return frames_list.get(frame)
 
+
 def load_frame(name, root):
     global running_window
     running_window = get_frame(name)(root)
 
+
 def load_ui():
-        global root
-        root = Tk()
+    global root
+    root = Tk()
 
-        root.attributes('-fullscreen', True)
-        root.rowconfigure(0, weight=1)
-        root.columnconfigure(0, weight=1)
+    root.attributes('-fullscreen', True)
+    root.rowconfigure(0, weight=1)
+    root.columnconfigure(0, weight=1)
 
-        load_frame('start', root)
-        root.mainloop()
+    load_frame('start', root)
+    root.mainloop()
 
-        print("Started UI")
-
+    print("Started UI")

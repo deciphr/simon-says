@@ -27,13 +27,14 @@ if __name__ == "__main__":
     ui_thread = threading.Thread(target=load_ui)
     ui_thread.daemon = True
     ui_thread.start()
-
+    
     # handle communication between server and client
-    with socketserver.TCPServer(('localhost', port), GameClientHandler) as server:
+    with socketserver.TCPServer(('10.190.23.40', port), GameClientHandler) as server:
         try:
             print(f"Starting server on {ip}:{port}")
             server.serve_forever()
             print("Started!")
+            
         except KeyboardInterrupt:
             print("Server quitting!")
         except OSError as e:
