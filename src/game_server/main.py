@@ -2,6 +2,7 @@ r"""
 Server UI and Funcs
 """
 
+from time import sleep
 from tkinter import *
 from tkinter import ttk
 
@@ -113,8 +114,9 @@ class GameFrame(BlankFrame):
         super().__init__(master)
 
         title = Label(
-            self.parent, text="HELO!", height=3, font=('Courier', 45))
-        title.pack(fill='x')
+            self.parent, text="Welcome to Simon Says!", height=3, font=('Courier', 45), wraplength=root.winfo_width())
+        title.place(relx=.5, rely=.5, anchor="center")
+        # title.after(1000, title.config(text="In order to play, you must use the following keys: W, A, S, D."))
 
 frames_list = {
     'start': StartFrame,
@@ -127,9 +129,7 @@ def get_frame(frame):
 
 def load_frame(name, root):
     global running_window
-    frame = get_frame(name)(root)
-
-    running_window = frame
+    running_window = get_frame(name)(root)
 
 def load_ui():
         global root
